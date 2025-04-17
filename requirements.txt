@@ -1,0 +1,22 @@
+# Core ML/Audio
+openai-whisper
+torch
+torchaudio
+
+# Flask backend
+Flask
+Werkzeug
+flask-cors
+gunicorn
+python-dotenv
+
+# Video/audio downloading and processing
+pytube3
+yt-dlp
+pillow
+youtube-transcript-api
+
+# Web/API tools
+requests
+gradio-client
+google-generativeai

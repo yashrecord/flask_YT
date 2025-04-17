@@ -1,0 +1,26 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environment
+venv/
+
+# Uploads
+uploads/
+downloads/
+Downloads/
+
+# Application files
+app/
+app1.py
+generate_image1.py
+processing_pipeline.py
+run.py
+start.py
+test.py
+
+# Other files
+cuda-repo-wsl-ubuntu-12-6-local_12.6.2-1_amd64.deb
+image.webp
+index.html
