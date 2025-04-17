@@ -4,10 +4,6 @@ FROM python:3.9-slim
 # Set working directory
 WORKDIR /app
 
-# Install system dependencies and build tools
-RUN apt-get update && \
-    apt-get install -y ffmpeg build-essential libssl-dev libffi-dev python3-dev && \
-    apt-get clean
 
 # Create non-root user
 RUN useradd -m -u 1000 user
