@@ -108,7 +108,7 @@ def generate_thumbnails():
             text=human=True
 
         image_name=genrate_thumbnail(summary,human,text)
-        path=f"thumbnails/{image_name}"
+        path=f"https://flaskyt-production.up.railway.app/thumbnails/{image_name}"
         mock_thumbnails = []
         mock_thumbnails.append(path)
     
