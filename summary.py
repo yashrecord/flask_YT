@@ -83,24 +83,24 @@ def process_video_from_url(video_url,cookie_path="cookie.txt"):
     return summary
 
 
-def download_video(video_url, download_dir="downloads", cookie_path="cookie.txt"):
-    os.makedirs(download_dir, exist_ok=True)
+# def download_video(video_url, download_dir="downloads", cookie_path="cookie.txt"):
+#     os.makedirs(download_dir, exist_ok=True)
 
-    ydl_opts = {
-        'format': 'bestvideo+bestaudio[ext=mp4]/best[ext=mp4]',
-        'outtmpl': os.path.join(download_dir, '%(title)s.%(ext)s'),
-        'merge_output_format': 'mp4',
-    }
+#     ydl_opts = {
+#         'format': 'bestvideo+bestaudio[ext=mp4]/best[ext=mp4]',
+#         'outtmpl': os.path.join(download_dir, '%(title)s.%(ext)s'),
+#         'merge_output_format': 'mp4',
+#     }
 
-    if cookie_path:
-        ydl_opts['cookiefile'] = cookie_path
+#     if cookie_path:
+#         ydl_opts['cookiefile'] = cookie_path
 
-    try:
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            info = ydl.extract_info(video_url, download=True)
-            return ydl.prepare_filename(info)
-    except Exception as e:
-        return f"Error: {str(e)}"
+#     try:
+#         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+#             info = ydl.extract_info(video_url, download=True)
+#             return ydl.prepare_filename(info)
+#     except Exception as e:
+#         return f"Error: {str(e)}"
 
 
 
@@ -157,20 +157,20 @@ def summarize_text(text,chunk_size=1024, overlap=100):
 
 
 
-def generate_video_summary(video_path, output_filename="summary.mp4"):
-    """Generates a video summary with script."""
-    audio_path = "temp_audio.wav"
+# def generate_video_summary(video_path, output_filename="summary.mp4"):
+#     """Generates a video summary with script."""
+#     audio_path = "temp_audio.wav"
 
-    # 1. Extract Audio with ffmpeg
-    extract_audio_from_video(video_path, audio_path)
-    print("Audio extracted.")
+#     # 1. Extract Audio with ffmpeg
+#     extract_audio_from_video(video_path, audio_path)
+#     print("Audio extracted.")
 
-    # 2. Transcribe Audio with Whisper
-    transcription = transcribe_audio_whisper(audio_path)
-    print("Audio transcribed.")
-    os.remove(audio_path)
-    # 3. Summarize Transcript
-    return transcription
+#     # 2. Transcribe Audio with Whisper
+#     transcription = transcribe_audio_whisper(audio_path)
+#     print("Audio transcribed.")
+#     os.remove(audio_path)
+#     # 3. Summarize Transcript
+#     return transcription
     
 def Generate_promt(summary,human,text):
     prompt = f"""Please extract the following information from the video summary:\
