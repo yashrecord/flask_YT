@@ -1,7 +1,4 @@
-# Core ML/Audio
-openai-whisper
-torch
-torchaudio
+
 
 # Flask backend
 Flask

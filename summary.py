@@ -1,7 +1,7 @@
-import yt_dlp
+#import yt_dlp
 import subprocess
 import os
-import whisper
+#import whisper
 import google.generativeai as palm
 from generate_image import generate_image
 from youtube_transcript_api import YouTubeTranscriptApi
@@ -58,9 +58,10 @@ def process_video_from_url(video_url,cookie_path="cookie.txt"):
 
     except Exception as e:
         print(f"[Transcript Error] Falling back to Whisper: {str(e)}")
-        video_path = download_video(video_url)
-        subtitle=generate_video_summary(video_path)
-        os.remove(video_path)
+        return subtitle
+        # video_path = download_video(video_url)
+        # subtitle=generate_video_summary(video_path)
+        # os.remove(video_path)
     else:
         for text in transcript:
             subtitle=subtitle+" "+text["text"]
@@ -104,18 +105,18 @@ def download_video(video_url, download_dir="downloads", cookie_path="cookie.txt"
 
 
 
-def extract_audio_from_video(video_path, audio_path):
-    """Extract audio from a video file using ffmpeg."""
-    cmd = ['ffmpeg', '-i', video_path, '-vn', '-acodec', 'pcm_s16le', '-ar', '44100', '-ac', '2', audio_path]
-    subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    return audio_path
+# def extract_audio_from_video(video_path, audio_path):
+#     """Extract audio from a video file using ffmpeg."""
+#     cmd = ['ffmpeg', '-i', video_path, '-vn', '-acodec', 'pcm_s16le', '-ar', '44100', '-ac', '2', audio_path]
+#     subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+#     return audio_path
 
-def transcribe_audio_whisper(audio_path):
-    """Transcribe the audio using Whisper."""
-    model = whisper.load_model("tiny")  # You can use "tiny", "base", "small", "medium", "large"
-    result = model.transcribe(audio_path)
-    transcription = result["text"]
-    return transcription
+# def transcribe_audio_whisper(audio_path):
+#     """Transcribe the audio using Whisper."""
+#     model = whisper.load_model("tiny")  # You can use "tiny", "base", "small", "medium", "large"
+#     result = model.transcribe(audio_path)
+#     transcription = result["text"]
+#     return transcription
 
 def summarize_text(text,chunk_size=1024, overlap=100):
     # Remove this line as it is redundant
