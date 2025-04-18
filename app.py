@@ -3,7 +3,8 @@ from flask_cors import CORS
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 import os
-from summary import process_video_from_url, genrate_thumbnail
+from summary import process_video_from_url, Generate_promt
+from generate_image import generate_image
 import requests
 
 
@@ -51,13 +52,13 @@ def summarize():
             return jsonify({"error": "Missing video URL"}), 400
 
         # Generate summary
-        summary = process_video_from_url(video_url)
-        if(not summary):
+        result = process_video_from_url(video_url)
+        if not result or not result.get('summary'):
             raise ValueError
         
-        return jsonify({'summary': summary})
+        return jsonify(result)
 
-    except ValueError :
+    except ValueError:
         print(f"Error in /summarize check issue return ")  # Debugging
         return jsonify({"error": f"Failed to process video"}), 500
 
@@ -85,27 +86,59 @@ def get_current_thumbnail():
 @app.route('/generate_thumbnails', methods=['POST'])
 @limiter.limit("2 per 30 seconds")
 def generate_thumbnails():
-    """Generate new thumbnails, upload to Cloudinary, and return public_id."""
+    """Generate new thumbnails based on style string and optional custom text."""
     try:
         data = request.get_json()
-        summary = data.get('summary')
-        video_url = data.get('video_url')
-        human = data.get("includeHuman", True)
-        text = data.get("includeText", True)
+        video_id = data.get('videoId')
+        style = data.get('style')  # Now expecting a string directly
+        custom_text = data.get('customText', '')  # Optional parameter
 
-        if not summary or not video_url:
-            return jsonify({"error": "Missing required parameters"}), 400
+        if not video_id or not style:
+            return jsonify({"error": "Missing required parameters: videoId and style"}), 400
 
-        # Generate the thumbnail (returns filename like 'thumb.png')
-        image_name = genrate_thumbnail(summary, human, text)
+        # Get video URL from video ID
+        video_url = f"https://www.youtube.com/watch?v={video_id}"
+
+        # Generate the thumbnail using the style string
+        prompt = style
+        if custom_text:
+            prompt = f"{prompt}\n\nInclude the following text: {custom_text}"
+
+        image_url = generate_image(prompt)
+        if image_url == "error":
+            raise ValueError("Failed to generate image")
         
         return jsonify({
-            "public_id": image_name  # you can also send `secure_url` if needed
+            "url": image_url
         }), 200
 
     except Exception as e:
         print(f"Error in /generate_thumbnails: {str(e)}")
         return jsonify({"error": f"Failed to generate thumbnails: {str(e)}"}), 500
+
+@app.route('/generate_style', methods=['POST'])
+@limiter.limit("2 per 30 seconds")
+def generate_style():
+    """Generate style description for thumbnail generation."""
+    try:
+        data = request.get_json()
+        summary = data.get('summary')
+        include_human = data.get('includeHuman', True)
+        include_text = data.get('includeText', True)
+
+        if not summary:
+            return jsonify({"error": "Missing summary parameter"}), 400
+
+        # Generate the style using Generate_promt
+        style = Generate_promt(summary, include_human, include_text)
+        
+        return jsonify({
+            "style": style
+        }), 200
+
+    except Exception as e:
+        print(f"Error in /generate_style: {str(e)}")
+        return jsonify({"error": f"Failed to generate style: {str(e)}"}), 500
 
 
 @app.errorhandler(413)
@@ -124,4 +157,4 @@ def not_found_error(error):
     return jsonify({"error": "Requested resource not found"}), 404
 
 if __name__ == '__main__':
-    app.run(host="0.0.0.0", port=7860)
+    app.run(host="0.0.0.0", port=7860,debug=True)
