@@ -3,43 +3,73 @@ import shutil
 from datetime import datetime
 from gradio_client import Client
 from gradio_client.exceptions import AppError
+import cloudinary
+import cloudinary.uploader
+from cloudinary.utils import cloudinary_url
+from dotenv import load_dotenv
+load_dotenv()
+
+api_key = os.getenv("IMAGE_KEY")
+if not api_key:
+    raise ValueError(" IMAGE_KEY environment variable not set. Please add it to your .env file.")
+
+
+# Configuration       
+cloudinary.config( 
+    cloud_name = "dsfiew0iy", 
+    api_key = "371416444248654", 
+    api_secret = api_key,
+    secure=True
+)
 
 
 def generate_image(prompt):
     try:
+        # Call the model
         client = Client("black-forest-labs/FLUX.1-schnell")
         result = client.predict(
             prompt,
             randomize_seed=True,
-            width=1280,  # Updated to YouTube thumbnail width
-            height=720,  # Updated to YouTube thumbnail height
+            width=1280,
+            height=720,
             num_inference_steps=4,
             api_name="/infer"
         )
-        
-        # Extract the file path from the result
+
         temp_file_path = result[0]
-        
-        # Define the downloads directory path
-        downloads_dir = os.path.join(os.path.expanduser("~"), "YT_thumbnail/backend/Downloads")
-        if not os.path.exists(downloads_dir):
-            os.makedirs(downloads_dir)
-        
-        # Generate a unique file name using a timestamp
+
+        # Create a unique name (no folder, just filename)
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         file_name = f"generated_image_{timestamp}.png"
-        destination = os.path.join(downloads_dir, file_name)
+
+        # Upload directly to Cloudinary
+        public_id = file_name.rsplit('.', 1)[0]
+        upload_result = cloudinary.uploader.upload(
+            temp_file_path,
+            public_id=public_id,
+            overwrite=True
+        )
+
+        if os.path.exists(temp_file_path):
+            os.remove(temp_file_path)
+
+        # Check upload result
+        if upload_result and "secure_url" in upload_result:
+            print(f"✅ Uploaded successfully! URL: {upload_result['secure_url']}")
+            return upload_result['secure_url']  # Return public_id or URL if needed
+
+        else:
+            print("❌ Upload failed, no URL returned")
+            return "error"
+
         
-        # Move the file to the downloads directory
-        shutil.move(temp_file_path, destination)
-        
-        print(f"File saved in Downloads directory: {destination}")
-        return file_name
-    
+
     except AppError as e:
-        print(f"Error: {e}")
-        # Handle the error by retrying after some time or alerting the user
+        print(f"❌ Model Error: {e}")
         print("You have exceeded the GPU quota. Please try again later.")
+        return "error"
+    except Exception as e:
+        print(f"❌ Unexpected Error: {str(e)}")
         return "error"
 
 if __name__ == "__main__":
@@ -59,4 +89,4 @@ if __name__ == "__main__":
     Composition: A centered, minimalist layout with clear and concise elements.
 
     Overall Aesthetic: Technical, informative, and visually appealing"""
-    generate_image(prompt)
+    print(generate_image(prompt))

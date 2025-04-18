@@ -2,6 +2,7 @@
 
 # Flask backend
 Flask
+Flask-Limiter
 Werkzeug
 flask-cors
 gunicorn
@@ -12,7 +13,7 @@ pytube3
 yt-dlp
 pillow
 youtube-transcript-api
-
+cloudinary
 # Web/API tools
 requests
 gradio-client

@@ -1,14 +1,9 @@
-#import yt_dlp
-import subprocess
 import os
-#import whisper
 import google.generativeai as palm
 from generate_image import generate_image
-from youtube_transcript_api import YouTubeTranscriptApi
-import re
 from new_summary import generate_newsummary
 from dotenv import load_dotenv
-
+from pytude_d import get_youtube_transcript
 load_dotenv()
 
 api_key = os.getenv("GEMINI_API_KEY")
@@ -16,64 +11,14 @@ if not api_key:
     raise ValueError("GEMINI_API_KEY environment variable not set. Please add it to your .env file.")
 
 
-
-
-class SummaryGenrationError():
-    ...
-
-
-
-
-
-def extract_video_id(youtube_url):
-    # Regular expression for extracting the video ID
-    pattern = (
-        r'(?:https?:\/\/)?(?:www\.)?'
-        r'(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|'
-        r'youtu\.be\/)'
-        r'([a-zA-Z0-9_-]{11})'
-    )
-    match = re.search(pattern, youtube_url)
-    if match:
-        return match.group(1)  # The video ID is in the first capture group
-    return None
-
-def process_video_from_url(video_url,cookie_path="cookie.txt"):
-    # video_path = download_video(video_url)
-    # summary=generate_video_summary(video_path)
-    # os.remove(video_path)
+def process_video_from_url(video_url):
     
-    subtitle=""
-    video_id=extract_video_id(video_url)
-    transcript=""
-    video_path=""
-    try:
-        if cookie_path:
-            transcript = YouTubeTranscriptApi.get_transcript(video_id, cookies=cookie_path)
-        else:
-            transcript = YouTubeTranscriptApi.get_transcript(video_id)
-
-        for text in transcript:
-            subtitle += " " + text["text"]
-
-    except Exception as e:
-        print(f"[Transcript Error] Falling back to Whisper: {str(e)}")
-        return subtitle
-        # video_path = download_video(video_url)
-        # subtitle=generate_video_summary(video_path)
-        # os.remove(video_path)
-    else:
-        for text in transcript:
-            subtitle=subtitle+" "+text["text"]
-    try:
-        extracted_string = re.search(r'downloads/(.*?)\.mp4', video_path).group(1)+" "
-    except Exception as e:
-        extracted_string=""
     
-
-
+    subtitle=get_youtube_transcript(video_url)
+    if not subtitle:
+        return None, f"Error in transcript"
     prompt=f"""
-        Provide a very short summary, no more than three sentences, for the following video {extracted_string}subtitle:
+        Provide a very short summary, no more than three sentences, for the following video {video_url} subtitle:
 
         {subtitle}
 
@@ -83,66 +28,14 @@ def process_video_from_url(video_url,cookie_path="cookie.txt"):
     return summary
 
 
-# def download_video(video_url, download_dir="downloads", cookie_path="cookie.txt"):
-#     os.makedirs(download_dir, exist_ok=True)
-
-#     ydl_opts = {
-#         'format': 'bestvideo+bestaudio[ext=mp4]/best[ext=mp4]',
-#         'outtmpl': os.path.join(download_dir, '%(title)s.%(ext)s'),
-#         'merge_output_format': 'mp4',
-#     }
-
-#     if cookie_path:
-#         ydl_opts['cookiefile'] = cookie_path
-
-#     try:
-#         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-#             info = ydl.extract_info(video_url, download=True)
-#             return ydl.prepare_filename(info)
-#     except Exception as e:
-#         return f"Error: {str(e)}"
-
-
-
-
-# def extract_audio_from_video(video_path, audio_path):
-#     """Extract audio from a video file using ffmpeg."""
-#     cmd = ['ffmpeg', '-i', video_path, '-vn', '-acodec', 'pcm_s16le', '-ar', '44100', '-ac', '2', audio_path]
-#     subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-#     return audio_path
-
-# def transcribe_audio_whisper(audio_path):
-#     """Transcribe the audio using Whisper."""
-#     model = whisper.load_model("tiny")  # You can use "tiny", "base", "small", "medium", "large"
-#     result = model.transcribe(audio_path)
-#     transcription = result["text"]
-#     return transcription
 
 def summarize_text(text,chunk_size=1024, overlap=100):
     # Remove this line as it is redundant
     palm.configure(api_key=api_key)  
-
-    # Split the text into manageable chunks with some overlap for better context
-    # text_chunks = []
-    # for i in range(0, len(text), chunk_size - overlap):
-    #     chunk = text[i:i + chunk_size]
-    #     text_chunks.append(chunk)
-
-    # summaries = []
-    # for chunk in text_chunks:
-    #     # Use a different model
-    #     model = palm.GenerativeModel(model_name="models/gemini-pro")
-    #     prompt = f"This is youtube subtitle, generate short word summary without losing any information: {chunk}"
-
-    #     # Use the generate_content function
-    #     response = model.generate_content(prompt)
-    #     summaries.append(response.text)
     model = palm.GenerativeModel(model_name="models/gemini-pro")
     prompt = f"""
     Provide a very short summary, no more than three sentences, for the following video subtitle:
-
     {text}
-
     Summary:
     """
     response = model.generate_content(prompt)
@@ -157,20 +50,6 @@ def summarize_text(text,chunk_size=1024, overlap=100):
 
 
 
-# def generate_video_summary(video_path, output_filename="summary.mp4"):
-#     """Generates a video summary with script."""
-#     audio_path = "temp_audio.wav"
-
-#     # 1. Extract Audio with ffmpeg
-#     extract_audio_from_video(video_path, audio_path)
-#     print("Audio extracted.")
-
-#     # 2. Transcribe Audio with Whisper
-#     transcription = transcribe_audio_whisper(audio_path)
-#     print("Audio transcribed.")
-#     os.remove(audio_path)
-#     # 3. Summarize Transcript
-#     return transcription
     
 def Generate_promt(summary,human,text):
     prompt = f"""Please extract the following information from the video summary:\
